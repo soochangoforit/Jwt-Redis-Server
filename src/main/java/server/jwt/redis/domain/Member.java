@@ -31,6 +31,7 @@ public class Member {
         this.email = email;
         this.nickname = nickname;
         this.password = password;
+        this.role = "USER"; // hasRole("ROLE_USER")
     }
 
     public static Member of(String email, String nickname, String password) {

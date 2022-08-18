@@ -7,8 +7,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import server.jwt.redis.dto.request.LoginRequestDto;
 import server.jwt.redis.dto.request.SignUpRequestDto;
 import server.jwt.redis.dto.response.BasicResponse;
+import server.jwt.redis.dto.response.LoginResponseDto;
 import server.jwt.redis.service.MemberService;
 
 @RestController
@@ -23,6 +25,12 @@ public class MemberController {
         memberService.signUp(signUpUser.getEmail(), signUpUser.getEmail(), signUpUser.getPassword());
         BasicResponse response = new BasicResponse("회원가입 성공", HttpStatus.CREATED);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginDto) {
+        String token = memberService.login(loginDto.getEmail(), loginDto.getPassword());
+        return new ResponseEntity<>(new LoginResponseDto(token), HttpStatus.OK);
     }
 
 }

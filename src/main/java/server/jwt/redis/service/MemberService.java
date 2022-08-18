@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import server.jwt.redis.domain.Member;
 import server.jwt.redis.exception.BadRequestException;
+import server.jwt.redis.jwt.JwtProvider;
 import server.jwt.redis.repository.MemberRepository;
 
 @Service
@@ -16,6 +17,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
 
     /**
      * 회원가입 시나리오는 다음과 같다.
@@ -41,6 +43,20 @@ public class MemberService {
         }
     }
 
+
+
+    public String login(String email, String password) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new BadRequestException("아이디 혹은 비밀번호를 확인하세요."));
+        checkPassword(password, member.getPassword());
+        return jwtProvider.createToken(member.getEmail(), member.getRole());
+    }
+
+    private void checkPassword(String password, String encodedPassword) {
+        boolean isSame = passwordEncoder.matches(password, encodedPassword);
+        if(!isSame) {
+            throw new BadRequestException("아이디 혹은 비밀번호를 확인하세요.");
+        }
+    }
 
 
 
