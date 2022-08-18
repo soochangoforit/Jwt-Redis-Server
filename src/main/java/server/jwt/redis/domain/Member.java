@@ -3,6 +3,7 @@ package server.jwt.redis.domain;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import server.jwt.redis.domain.enums.Role;
 
 import javax.persistence.*;
 
@@ -24,14 +25,15 @@ public class Member {
     @Column(nullable = false)
     private String password;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
 
     private Member(String email, String nickname, String password) {
         this.email = email;
         this.nickname = nickname;
         this.password = password;
-        this.role = "USER"; // hasRole("ROLE_USER")
+        this.role = Role.ROLE_USER; // hasRole("ROLE_USER")
     }
 
     public static Member of(String email, String nickname, String password) {

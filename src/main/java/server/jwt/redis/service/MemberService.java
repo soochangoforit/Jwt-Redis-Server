@@ -48,7 +48,7 @@ public class MemberService {
     public String login(String email, String password) {
         Member member = memberRepository.findByEmail(email).orElseThrow(() -> new BadRequestException("아이디 혹은 비밀번호를 확인하세요."));
         checkPassword(password, member.getPassword());
-        return jwtProvider.createToken(member.getEmail(), member.getRole());
+        return jwtProvider.createToken(member.getId().toString(), member.getEmail(), member.getRole());
     }
 
     private void checkPassword(String password, String encodedPassword) {
