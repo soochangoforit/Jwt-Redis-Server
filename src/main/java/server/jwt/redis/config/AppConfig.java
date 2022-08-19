@@ -49,7 +49,7 @@ public class AppConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/v1/user/sign-up", "/api//v1/user/login").permitAll()
+                .antMatchers("/api/v1/user/sign-up", "/api//v1/user/login" , "/api/v1/user/re-issue").permitAll()
                 .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 .and()

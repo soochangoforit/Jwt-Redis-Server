@@ -3,10 +3,7 @@ package server.jwt.redis.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import server.jwt.redis.dto.request.LoginRequestDto;
 import server.jwt.redis.dto.request.SignUpRequestDto;
 import server.jwt.redis.dto.response.BasicResponse;
@@ -29,8 +26,15 @@ public class MemberController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginDto) {
-        String token = memberService.login(loginDto.getEmail(), loginDto.getPassword());
-        return new ResponseEntity<>(new LoginResponseDto(token), HttpStatus.OK);
+        LoginResponseDto responseDto = memberService.login(loginDto.getEmail(), loginDto.getPassword());
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
+    }
+
+
+    @GetMapping("/re-issue")
+    public ResponseEntity<LoginResponseDto> reIssue(@RequestParam("email") String email, @RequestParam("refreshToken") String refreshToken) {
+        LoginResponseDto responseDto = memberService.reIssueAccessToken(email, refreshToken);
+        return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }
 
 }

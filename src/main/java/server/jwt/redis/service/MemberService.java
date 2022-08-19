@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import server.jwt.redis.domain.Member;
+import server.jwt.redis.dto.response.LoginResponseDto;
 import server.jwt.redis.exception.BadRequestException;
 import server.jwt.redis.jwt.JwtProvider;
 import server.jwt.redis.repository.MemberRepository;
@@ -44,11 +45,18 @@ public class MemberService {
     }
 
 
-
-    public String login(String email, String password) {
+    /**
+     * 추가로, 기존에는 jwtProvider의 createToken 메서드를 호출하여 AccessToken을 발급하였으나
+     * RefreshToken의 발급 또한 비슷한 과정을 통해 발급되기 때문에 재사용성을 고려하여 아래와 같이 수정하였다.
+     */
+    public LoginResponseDto login(String email, String password) {
         Member member = memberRepository.findByEmail(email).orElseThrow(() -> new BadRequestException("아이디 혹은 비밀번호를 확인하세요."));
         checkPassword(password, member.getPassword());
-        return jwtProvider.createToken(member.getId().toString(), member.getEmail(), member.getRole());
+
+        String accessToken = jwtProvider.createAccessToken( member.getId().toString(), member.getEmail(), member.getRole());
+        String refreshToken = jwtProvider.createRefreshToken(member.getId().toString(), member.getEmail(), member.getRole());
+
+        return new LoginResponseDto(accessToken, refreshToken);
     }
 
     private void checkPassword(String password, String encodedPassword) {
@@ -59,8 +67,12 @@ public class MemberService {
     }
 
 
+    public LoginResponseDto reIssueAccessToken(String email, String refreshToken) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new BadRequestException("존재하지 않는 유저입니다."));
+        // refresh token이 redis이 존재하는지 확인 -> 존재하면 유효한 토큰이므로 발급
+        jwtProvider.checkRefreshToken(member.getId(), refreshToken);
+        String accessToken = jwtProvider.createAccessToken(member.getId().toString(),member.getEmail(), member.getRole());
+        return new LoginResponseDto(accessToken, refreshToken);
 
-
-
-
+    }
 }
