@@ -16,7 +16,7 @@ import server.jwt.redis.jwt.JwtProvider;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class AppConfig {
+public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
 
