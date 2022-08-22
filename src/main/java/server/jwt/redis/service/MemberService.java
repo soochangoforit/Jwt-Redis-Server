@@ -1,24 +1,32 @@
 package server.jwt.redis.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import server.jwt.redis.Redis.RedisService;
 import server.jwt.redis.domain.Member;
+import server.jwt.redis.domain.enums.Role;
 import server.jwt.redis.dto.response.LoginResponseDto;
 import server.jwt.redis.exception.BadRequestException;
 import server.jwt.redis.jwt.JwtProvider;
 import server.jwt.redis.repository.MemberRepository;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class MemberService {
 
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final DuplicateService duplicateService;
+    private final RedisService redisService;
 
     /**
      * 회원가입 시나리오는 다음과 같다.
@@ -29,50 +37,44 @@ public class MemberService {
      * 회원가입
      */
     @Transactional
-    public void signUp(String email, String nickname, String password){
-        checkEmailIsDuplicate(email);
-        //checkPasswordConvertion(password); 비밀번호 규칙 설정
+    public void signUp(String username, String password , String email , String nickname) {
+        duplicateService.checkMemberIsDuplicate(username,email,nickname);
+        duplicateService.checkPasswordConversion(password);
         String encodedPassword = passwordEncoder.encode(password);
-        Member newAccount = Member.of(email, nickname, encodedPassword);
+        Member newAccount = Member.of(username, encodedPassword, email, nickname , Role.ROLE_USER);
         memberRepository.save(newAccount);
     }
 
-    private void checkEmailIsDuplicate(String email) {
-        boolean isDuplicate = memberRepository.existsByEmail(email);
-        if(isDuplicate) {
-            throw new BadRequestException("이미 존재하는 회원입니다.");
-        }
-    }
 
+    public LoginResponseDto reIssueAccessToken(String refreshToken, String clientIp) {
 
-    /**
-     * 추가로, 기존에는 jwtProvider의 createToken 메서드를 호출하여 AccessToken을 발급하였으나
-     * RefreshToken의 발급 또한 비슷한 과정을 통해 발급되기 때문에 재사용성을 고려하여 아래와 같이 수정하였다.
-     */
-    public LoginResponseDto login(String email, String password) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new BadRequestException("아이디 혹은 비밀번호를 확인하세요."));
-        checkPassword(password, member.getPassword());
+        // 유효성 검증이 어차피 존재하지 않는 refresh token이면 redis에서 걸러주지만 먼저 걸러주는 작업을 해보도록 하자
+        // refresh token에 문제가 있으면 Exception을 반환한다.
+        jwtProvider.validateRefreshToken(refreshToken);
 
-        String accessToken = jwtProvider.createAccessToken( member.getId().toString(), member.getEmail(), member.getRole());
-        String refreshToken = jwtProvider.createRefreshToken(member.getId().toString(), member.getEmail(), member.getRole());
-
-        return new LoginResponseDto(accessToken, refreshToken);
-    }
-
-    private void checkPassword(String password, String encodedPassword) {
-        boolean isSame = passwordEncoder.matches(password, encodedPassword);
-        if(!isSame) {
-            throw new BadRequestException("아이디 혹은 비밀번호를 확인하세요.");
-        }
-    }
-
-
-    public LoginResponseDto reIssueAccessToken(String email, String refreshToken) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new BadRequestException("존재하지 않는 유저입니다."));
         // refresh token이 redis이 존재하는지 확인 -> 존재하면 유효한 토큰이므로 발급
-        jwtProvider.checkRefreshToken(member.getId(), refreshToken);
-        String accessToken = jwtProvider.createAccessToken(member.getId().toString(),member.getEmail(), member.getRole());
-        return new LoginResponseDto(accessToken, refreshToken);
+        // todo : test 필요 다른 ip에서
+        boolean isAvailable = jwtProvider.checkRefreshToken(refreshToken, clientIp);
+
+        // 올바른 요청이든 , 그렇지 않든 무조건 일단 삭제한다.
+        redisService.deleteRefreshToken(refreshToken);
+
+        // 유효하면 Availability true, 유효하지 않으면 false
+        String newAccessToken = null;
+        String newRefreshToken = null;
+        if(isAvailable) {
+            String refreshToken_db_id = jwtProvider.getDb_Id(refreshToken);
+            newAccessToken = jwtProvider.createAccessToken(Long.parseLong(refreshToken_db_id), Role.ROLE_USER);
+            newRefreshToken = jwtProvider.createRefreshToken(Long.parseLong(refreshToken_db_id), clientIp);
+        }else{
+            throw new BadRequestException("해킹이 의심되거나 혹은 refresh token을 요청한 IP주소가 달라졌습니다.");
+        }
+        return new LoginResponseDto(newAccessToken, newRefreshToken);
+    }
+
+
+    public void logout(String accessToken, String refreshToken) {
+        jwtProvider.logout(accessToken, refreshToken);
 
     }
 }

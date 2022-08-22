@@ -26,7 +26,6 @@ public class PrincipalDetails implements UserDetails {
 
         authorities.add(new SimpleGrantedAuthority(member.getRole().getAuthority()));
 
-
         return authorities;
     }
 
@@ -37,7 +36,7 @@ public class PrincipalDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return member.getEmail();
+        return member.getUsername();
     }
 
     @Override

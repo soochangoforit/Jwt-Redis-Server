@@ -3,6 +3,7 @@ package server.jwt.redis.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -10,8 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import server.jwt.redis.exception.CustomAuthenticationEntryPoint;
-import server.jwt.redis.jwt.JwtAuthenticationFilter;
-import server.jwt.redis.jwt.JwtProvider;
+import server.jwt.redis.jwt.*;
+import server.jwt.redis.service.RequestService;
 
 @Configuration
 @EnableWebSecurity
@@ -19,13 +20,11 @@ import server.jwt.redis.jwt.JwtProvider;
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
-
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAuthenticationManager customAuthenticationManager;
+    private final RequestService requestService;
+    private final CustomAuthorizationFilter customAuthorizationFilter;
 
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
 
     /**
      * SecurityFilterChain
@@ -42,6 +41,10 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(customAuthenticationManager,jwtProvider,requestService);
+        customAuthenticationFilter.setFilterProcessesUrl("/api/v1/user/login");
+
         http.cors().and().csrf().disable()
                 .exceptionHandling()
                 .authenticationEntryPoint(customAuthenticationEntryPoint)
@@ -49,11 +52,12 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/v1/user/sign-up", "/api//v1/user/login" , "/api/v1/user/re-issue").permitAll()
+                .antMatchers("/api/v1/user/signup", "/api/v1/user/login", "/api/v1/user/refresh").permitAll()
                 .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 .and()
-                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilter(customAuthenticationFilter)
+                .addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
 
 
         return http.build();
