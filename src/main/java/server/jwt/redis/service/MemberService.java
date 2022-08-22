@@ -15,6 +15,7 @@ import server.jwt.redis.repository.MemberRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +55,7 @@ public class MemberService {
 
         // refresh token이 redis이 존재하는지 확인 -> 존재하면 유효한 토큰이므로 발급
         // todo : test 필요 다른 ip에서
-        boolean isAvailable = jwtProvider.checkRefreshToken(refreshToken, clientIp);
+        Map<String, String> redisValueMap = jwtProvider.checkRefreshToken(refreshToken, clientIp);
 
         // 올바른 요청이든 , 그렇지 않든 무조건 일단 삭제한다.
         redisService.deleteRefreshToken(refreshToken);
@@ -62,10 +63,10 @@ public class MemberService {
         // 유효하면 Availability true, 유효하지 않으면 false
         String newAccessToken = null;
         String newRefreshToken = null;
-        if(isAvailable) {
-            String refreshToken_db_id = jwtProvider.getDb_Id(refreshToken);
-            newAccessToken = jwtProvider.createAccessToken(Long.parseLong(refreshToken_db_id), Role.ROLE_USER);
-            newRefreshToken = jwtProvider.createRefreshToken(Long.parseLong(refreshToken_db_id), clientIp);
+        if(redisValueMap != null) {
+            String userId = redisValueMap.get("userId");
+            newAccessToken = jwtProvider.createAccessToken(Long.parseLong(userId), Role.ROLE_USER);
+            newRefreshToken = jwtProvider.createRefreshToken(Long.parseLong(userId), clientIp);
         }else{
             throw new BadRequestException("해킹이 의심되거나 혹은 refresh token을 요청한 IP주소가 달라졌습니다.");
         }

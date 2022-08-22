@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import server.jwt.redis.exception.BadRequestException;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -39,7 +41,7 @@ public class RedisService {
     }
 
 
-    public String getValuesForClientIp(String key_refresh_token) {
+    public Map<String,String> getValuesForClientIp(String key_refresh_token) {
         ValueOperations<String, Object> values = redisTemplate.opsForValue();
         RedisValue redisValue = (RedisValue) values.get(key_refresh_token);
 
@@ -51,8 +53,13 @@ public class RedisService {
 
 
         String clientIp = redisValue.getClientIp();
+        String userId = redisValue.getUserId();
 
-        return clientIp;
+        Map<String,String> map = new HashMap<>();
+        map.put("realClientIp",clientIp);
+        map.put("userId",userId);
+
+        return map;
     }
 
     public void deleteValues(String key) {

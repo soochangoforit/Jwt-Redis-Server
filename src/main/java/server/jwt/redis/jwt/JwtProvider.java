@@ -18,10 +18,7 @@ import server.jwt.redis.repository.MemberRepository;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.Date;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -54,7 +51,7 @@ public class JwtProvider {
 
     public String createRefreshToken(Long userId, String clientIp) {
         Long tokenInvalidTime = 1000L * 60 * 60 * 24; // 1day
-        String refreshToken = this.createTokenForRefresh(userId, tokenInvalidTime);
+        String refreshToken = this.createTokenForRefresh(tokenInvalidTime);
         redisService.setRefreshValues(refreshToken, clientIp , userId, Duration.ofMillis(tokenInvalidTime)); // redis에서 기간도 함께 설정
         return refreshToken;
     }
@@ -75,12 +72,12 @@ public class JwtProvider {
     }
 
 
-    private String createTokenForRefresh(Long userId, Long tokenInvalidTime){
-        Claims claims = Jwts.claims().setSubject(userId.toString()); // claims 생성 및 payload 설정
+    private String createTokenForRefresh(Long tokenInvalidTime){
+        //Claims claims = Jwts.claims().setSubject(userId.toString()); // claims 생성 및 payload 설정
         Date date = new Date();
 
         return Jwts.builder()
-                .setClaims(claims) // 발행 유저 정보 저장
+                //.setClaims(claims) // 발행 유저 정보 저장
                 .setIssuedAt(date) // 발행 시간 저장
                 .setExpiration(new Date(date.getTime() + tokenInvalidTime)) // 토큰 유효 시간 저장
                 .signWith(SignatureAlgorithm.HS256, secretKey) // 해싱 알고리즘 및 키 설정
@@ -118,11 +115,11 @@ public class JwtProvider {
         try {
             Jwts.parser().setSigningKey(secretKey).parseClaimsJws(refreshToken); //verify token
         } catch (MalformedJwtException | SignatureException | UnsupportedJwtException e) {
-            throw new BadCredentialsException("토큰의 형식을 확인하세요");
+            throw new BadCredentialsException("Refresh 토큰의 형식을 확인하세요");
         } catch (ExpiredJwtException e) {
-            throw new BadCredentialsException("토큰이 만료되었습니다.");
+            throw new BadCredentialsException("Refresh 토큰이 만료되었습니다.");
         } catch (IllegalArgumentException e) {
-            throw new BadCredentialsException("JWT compact of handler are invalid");
+            throw new BadCredentialsException("Refresh JWT compact of handler are invalid");
         }
     }
 
@@ -148,12 +145,15 @@ public class JwtProvider {
     }
 
 
-    public boolean checkRefreshToken(String refreshToken, String clientIp) {
+    public Map<String, String> checkRefreshToken(String refreshToken, String clientIp) {
 
-        String clientRealIp = redisService.getValuesForClientIp(refreshToken);
+        Map<String, String> valuesFromRedis = redisService.getValuesForClientIp(refreshToken);
         // 첫요청한 refresh token이 아직 유효하면서도 올바른 요청의 ip인 경우
         // 탈취 된 token 혹은 이전에 요청한 ip가 아닌 경우
-        return clientIp.equals(clientRealIp);
+        if(valuesFromRedis.get("realClientIp").equals(clientIp)){
+            return valuesFromRedis;
+        }
+        return null;
     }
 
     public void logout(String accessToken, String refreshToken){
