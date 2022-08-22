@@ -2,6 +2,7 @@ package server.jwt.redis.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -12,6 +13,7 @@ import server.jwt.redis.dto.request.LoginRequestDto;
 import server.jwt.redis.service.RequestService;
 
 import javax.servlet.FilterChain;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -71,11 +73,20 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         String accessToken = jwtProvider.createAccessToken( member.getId(), member.getRole());
         String refreshToken = jwtProvider.createRefreshToken(member.getId() ,clientIp);
 
+        // refresh token은 cookie에 담아주기
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .maxAge(1 * 24 * 60 * 60) // 1 day
+                .httpOnly(true)
+                .path("/")
+                .secure(true)
+                .build();
 
+        response.setHeader("Set-Cookie",cookie.toString());
 
         Map<String , String> tokens = new HashMap<>();
-        tokens.put("accessToken" , accessToken);
-        tokens.put("refreshToken" , refreshToken);
+        tokens.put("accessToken" ,  accessToken);
+        //tokens.put("refreshToken" , refreshToken); -> refresh token은 쿠키게 담아주기 위해서
+
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_OK);
 
