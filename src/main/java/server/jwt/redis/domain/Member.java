@@ -28,20 +28,31 @@ public class Member {
     @Column(nullable = false)
     private String nickname;
 
+    @Column
+    private String picture;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
 
-    private Member(String username, String password, String email , String nickname , Role role) {
+    @Builder
+    private Member(String username, String password, String email , String nickname, String picture ,Role role) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.nickname = nickname;
+        this.picture = picture;
         this.role = role;
     }
 
     public static Member of(String username, String password, String email, String nickname, Role role) {
-        return new Member(username, password, email, nickname, role);
+        return Member.builder()
+                .username(username)
+                .password(password)
+                .email(email)
+                .nickname(nickname)
+                .role(role)
+                .build();
     }
 
 }

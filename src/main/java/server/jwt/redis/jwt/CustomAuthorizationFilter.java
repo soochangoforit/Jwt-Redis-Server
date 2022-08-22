@@ -40,7 +40,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
         // 대신 config에 해당 url에 대해서는 반드시 permitAll()이 이루어져야 한다.
         // 권한이 필요없는 모든 요청을 여기다가 담아준다. 즉 PERMIT ALL에 해당하는 요청들
         if (request.getServletPath().equals("/api/v1/user/refresh") || request.getServletPath().equals("/api/v1/user/login")
-        || request.getServletPath().equals("/api/v1/user/signup")) {
+        || request.getServletPath().equals("/api/v1/user/signup") || request.getServletPath().equals("/api/v1/user/home") ) {
             filterChain.doFilter(request, response);
         }else{
             String accessToken = resolveToken(request.getHeader(AUTHORIZATION));

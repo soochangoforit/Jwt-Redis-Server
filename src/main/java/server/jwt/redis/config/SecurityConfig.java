@@ -24,7 +24,8 @@ public class SecurityConfig {
     private final CustomAuthenticationManager customAuthenticationManager;
     private final RequestService requestService;
     private final CustomAuthorizationFilter customAuthorizationFilter;
-
+    private final OAuth2SuccessHandler successHandler; // OAuth2 로그인 성공후 처리하는 핸들러
+    private final PrincipalOauth2UserService principalOauth2UserService; // oauth2
 
     /**
      * SecurityFilterChain
@@ -52,12 +53,17 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/v1/user/signup", "/api/v1/user/login", "/api/v1/user/refresh").permitAll()
+                .antMatchers("/api/v1/user/signup", "/api/v1/user/login", "/api/v1/user/refresh" , "/api/v1/user/home").permitAll()
                 .antMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 .and()
                 .addFilter(customAuthenticationFilter)
-                .addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
+
+                .oauth2Login()
+                .successHandler(successHandler)
+                .userInfoEndpoint()
+                .userService(principalOauth2UserService);
 
 
         return http.build();

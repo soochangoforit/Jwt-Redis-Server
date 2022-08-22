@@ -5,19 +5,30 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import server.jwt.redis.domain.Member;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 @Getter
-public class PrincipalDetails implements UserDetails {
+public class PrincipalDetails implements UserDetails , OAuth2User {
 
     private final Member member;
+
+    private Map<String ,Object> attributes;
 
     public PrincipalDetails(Member member) {
         this.member = member;
     }
+
+    // Oauth2
+    public PrincipalDetails(Member member,Map<String, Object> attributes) { // OAuth2 로그인용 생성지
+        this.member = member;
+        this.attributes = attributes;
+    }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -39,6 +50,20 @@ public class PrincipalDetails implements UserDetails {
         return member.getUsername();
     }
 
+    // oauth2
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    // oauth2
+    @Override
+    public String getName() {
+        return member.getNickname();
+    }
+
+
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -58,4 +83,6 @@ public class PrincipalDetails implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+
 }

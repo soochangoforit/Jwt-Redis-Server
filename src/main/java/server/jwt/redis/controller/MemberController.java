@@ -31,7 +31,7 @@ import java.util.List;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@RestController
+@Controller
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/user")
 @Slf4j
@@ -41,7 +41,13 @@ public class MemberController {
     private final RequestService requestService;
     private final JwtProvider jwtProvider;
 
+    @GetMapping("/home")
+    public String login() {
+        return "loginPage";
+    }
+
     @PostMapping("/signup")
+    @ResponseBody
     public ResponseEntity<BasicResponse> signUp(@RequestBody SignUpRequestDto signUpUser) {
         memberService.signUp(signUpUser.getUsername(), signUpUser.getPassword() , signUpUser.getEmail() , signUpUser.getNickname());
         BasicResponse response = new BasicResponse("회원가입 성공", HttpStatus.CREATED);
@@ -50,6 +56,7 @@ public class MemberController {
 
 
     @GetMapping(value = "/refresh")
+    @ResponseBody
     public ResponseEntity<LoginResponseDto> reIssue(@CookieValue(name="refreshToken") String refreshToken , HttpServletRequest request) throws IOException {
 
         String clientIp = requestService.getClientIp(request);
@@ -63,11 +70,13 @@ public class MemberController {
     }
 
     @GetMapping("/test")
+    @ResponseBody
     public String test(@AuthenticationPrincipal String id) {
         return id;
     }
 
     @GetMapping("/logout")
+    @ResponseBody
     public ResponseEntity<BasicResponse> logout(@CookieValue(name="refreshToken") String refreshToken, HttpServletRequest request) {
 
         String accessToken = request.getHeader(AUTHORIZATION).substring(7);
