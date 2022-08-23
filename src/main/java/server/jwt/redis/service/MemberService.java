@@ -2,6 +2,7 @@ package server.jwt.redis.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,10 +53,11 @@ public class MemberService {
 
         // 유효성 검증이 어차피 존재하지 않는 refresh token이면 redis에서 걸러주지만 먼저 걸러주는 작업을 해보도록 하자
         // refresh token에 문제가 있으면 Exception을 반환한다.
+        // error -> return BadCredentialsException (토큰 형식, 유효성 문제)
         jwtProvider.validateRefreshToken(refreshToken);
 
         // refresh token이 redis이 존재하는지 확인 -> 존재하면 유효한 토큰이므로 발급
-        // todo : test 필요 다른 ip에서
+        // error -> return BadRequestException (존재하지 않는 토큰일 경우)
         Map<String, String> redisValueMap = jwtProvider.checkRefreshToken(refreshToken, clientIp);
 
         // 올바른 요청이든 , 그렇지 않든 무조건 일단 삭제한다.
@@ -69,7 +71,7 @@ public class MemberService {
             newAccessToken = jwtProvider.createAccessToken(Long.parseLong(userId), Role.ROLE_USER);
             newRefreshToken = jwtProvider.createRefreshToken(Long.parseLong(userId), clientIp);
         }else{
-            throw new BadRequestException("해킹이 의심되거나 혹은 refresh token을 요청한 IP주소가 달라졌습니다.");
+            throw new BadCredentialsException("해킹이 의심되거나 혹은 refresh token을 요청한 IP주소가 달라졌습니다.");
         }
 
         Map<String, String> map = new HashMap<>();

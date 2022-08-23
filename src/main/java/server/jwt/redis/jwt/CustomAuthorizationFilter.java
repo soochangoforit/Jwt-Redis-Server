@@ -53,6 +53,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 // 사용하고자 하는 AccessToken이 Redis의 로그아웃된 AccessToken인지 아닌지 확인하는 절차
                 RedisValue isLogout = (RedisValue) redisTemplate.opsForValue().get(blackListATPrefix + accessToken);
 
+                // 로그아웃되어 redis에 black list로 올라온 access token에 대해서는 접근이 불가능하다.
                 if(isLogout != null){
                     // return 403 value
                     request.setAttribute("exception","로그아웃된 토큰입니다.");
@@ -63,7 +64,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 if(ObjectUtils.isEmpty(isLogout)){
                     // 토큰 유효성 검사 후 문제 없으면 spring security session에 해당 객체 저장
                     // validation 검사 후 문제 있으면 exception을 request에 set하고 다음 filter chain으로 넘어간다.
-                    // 해당 exception에 대한 entry point 필요
+                    // 해당 exception에 대해서는 CustomAuthenticationEntryPoint에서 처리한다.
                     Authentication authentication = jwtProvider.validateToken(request, accessToken);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 

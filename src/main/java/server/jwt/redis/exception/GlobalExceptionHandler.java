@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 토큰의 형식이 맞지 않는 경우
+     * 토큰의 형식이 맞지 않는 경우 혹은 해킹이 의심되거나 IP주소가 달라진경우
      */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<BasicResponse> handle(BadCredentialsException e) {
