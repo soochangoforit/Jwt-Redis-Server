@@ -40,13 +40,8 @@ public class RedisConfig {
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(RedisValue.class));
 
-        //redisTemplate.setEnableTransactionSupport(true);
         return redisTemplate;
     }
 
-//    @Bean
-//    public PlatformTransactionManager transactionManager() {
-//        return new JpaTransactionManager();
-//    }
 
 }

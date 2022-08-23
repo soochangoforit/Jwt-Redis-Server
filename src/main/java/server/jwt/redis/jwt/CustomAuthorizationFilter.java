@@ -29,9 +29,6 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     @Value("${spring.jwt.blacklist.access-token}")
     private String blackListATPrefix;
 
-
-
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                                                 throws IOException, ServletException {
@@ -45,14 +42,13 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
         }else{
             String accessToken = resolveToken(request.getHeader(AUTHORIZATION));
 
-            // 일반 로그인, 회원가입 같은 경우는 header가 없기 때문에 그냥 다음 filter로 넘어간다.
             if (accessToken != null) {
-                // todo : test 필요
                 // 사용하고자 하는 AccessToken이 Redis의 로그아웃된 AccessToken인지 아닌지 확인하는 절차
                 RedisValue isLogout = (RedisValue) redisTemplate.opsForValue().get(blackListATPrefix + accessToken);
 
                 if(isLogout != null){
-                    request.setAttribute("exception","로그아웃된 토큰 입니다.");
+                    // return 403 value
+                    request.setAttribute("exception","로그아웃된 토큰입니다.");
                     filterChain.doFilter(request, response);
                 }
 
@@ -68,6 +64,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 }
 
             } else {
+                // 로그인에 필요한 서비스에 접근했는데 Header에 토큰이 없는 경우
+                request.setAttribute("exception","로그인이 필요한 서비스입니다.");
                 filterChain.doFilter(request, response);
             }
         }
@@ -81,8 +79,4 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     private String resolveToken(String authorization) {
         return authorization != null ? authorization.substring(7) : null; // "bearer " 짤라낸다.
     }
-
-
-
-
 }

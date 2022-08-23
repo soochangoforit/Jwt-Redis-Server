@@ -11,7 +11,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import server.jwt.redis.Redis.RedisService;
-import server.jwt.redis.Redis.RedisValue;
 import server.jwt.redis.domain.enums.Role;
 import server.jwt.redis.repository.MemberRepository;
 
@@ -103,7 +102,7 @@ public class JwtProvider {
         } catch (ExpiredJwtException e) {
             request.setAttribute(exception, "토큰이 만료되었습니다.");
         } catch (IllegalArgumentException e) {
-            request.setAttribute(exception, "JWT compact of handler are invalid");
+            request.setAttribute(exception, "JWT claims string is empty.");
         }
         return null;
     }
