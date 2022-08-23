@@ -11,6 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import server.jwt.redis.domain.Member;
 import server.jwt.redis.dto.request.LoginRequestDto;
 import server.jwt.redis.dto.response.DefaultDataResponse;
+import server.jwt.redis.dto.response.LoginResponseDto;
 import server.jwt.redis.service.RequestService;
 
 import javax.servlet.FilterChain;
@@ -82,16 +83,14 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         response.setHeader("Set-Cookie",cookie.toString());
 
-        Map<String , String> tokens = new HashMap<>();
-        tokens.put("accessToken" ,  accessToken);
-        //tokens.put("refreshToken" , refreshToken); -> refresh token은 쿠키게 담아주기 위해서
+        LoginResponseDto responseDto = new LoginResponseDto(accessToken);
 
         // 응답시 정해진 형식에 맞춰서 응답, status, message , data를 담아서 응답한다.
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding("UTF-8");
 
-        DefaultDataResponse<Map<String, String>> loginSuccessRes = DefaultDataResponse.of(HttpStatus.OK.value(), "로그인 성공", tokens);
-        response.getWriter().write(new ObjectMapper().writeValueAsString(loginSuccessRes));
+        DefaultDataResponse<LoginResponseDto> loginSuccessResponse = DefaultDataResponse.of(HttpStatus.OK.value(), "로그인 성공", responseDto);
+        response.getWriter().write(new ObjectMapper().writeValueAsString(loginSuccessResponse));
     }
 }
