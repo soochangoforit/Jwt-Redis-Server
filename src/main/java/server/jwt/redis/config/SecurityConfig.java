@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,16 +13,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import server.jwt.redis.exception.CustomAuthenticationEntryPoint;
+import server.jwt.redis.exception.CustomAuthorizationEntryPoint;
 import server.jwt.redis.jwt.*;
 import server.jwt.redis.service.RequestService;
 
+/**
+ * @EnableGlobalMethodSecurity(securedEnabled = true , prePostEnabled = true) 같은 경우는
+ * 만약 특정 controller 전체를 특정 권한으로 설정하고 싶다면 컨트롤러 위에 애노테이션을 달아주면 된다.
+ * @어노테이션이 달리지 않는 메소드는 누구나 접근 가능한 리소스가 된다.
+ */
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(securedEnabled = true , prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAuthorizationEntryPoint customAuthorizationEntryPoint;
     private final CustomAuthenticationManager customAuthenticationManager;
     private final RequestService requestService;
     private final CustomAuthorizationFilter customAuthorizationFilter;
@@ -50,6 +59,8 @@ public class SecurityConfig {
         http.cors().and().csrf().disable()
                 .exceptionHandling()
                 .authenticationEntryPoint(customAuthenticationEntryPoint) // 인증이 되지 않는 사용자 접근시 처리할 entrypoint
+                .and()
+                .exceptionHandling().accessDeniedHandler(customAuthorizationEntryPoint)
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
