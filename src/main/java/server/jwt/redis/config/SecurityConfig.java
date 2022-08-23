@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -48,7 +49,7 @@ public class SecurityConfig {
 
         http.cors().and().csrf().disable()
                 .exceptionHandling()
-                .authenticationEntryPoint(customAuthenticationEntryPoint)
+                .authenticationEntryPoint(customAuthenticationEntryPoint) // 인증이 되지 않는 사용자 접근시 처리할 entrypoint
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()

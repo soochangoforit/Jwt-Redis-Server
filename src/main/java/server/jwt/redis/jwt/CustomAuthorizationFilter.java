@@ -15,6 +15,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static java.util.Arrays.stream;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -26,6 +29,14 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    /**
+     * refresh 요청 및 일반 권한이 필요없는 요청은 해당 필터를 거치지 않는다.
+     * 대신 config에 해당 url에 대해서는 반드시 permitAll()이 이루어져야 한다.
+     * 권한이 필요없는 모든 요청을 여기다가 담아준다. 즉 PERMIT ALL에 해당하는 요청들
+     */
+    private static final List<String> EXCLUDE_URL = List.of(
+            "/api/v1/user/refresh", "/api/v1/user/signup", "/api/v1/user/login", "/api/v1/user/home");
+
     @Value("${spring.jwt.blacklist.access-token}")
     private String blackListATPrefix;
 
@@ -33,13 +44,6 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                                                 throws IOException, ServletException {
 
-        // refresh 요청 및 일반 권한이 필요없는 요청은 해당 필터를 거치지 않는다.
-        // 대신 config에 해당 url에 대해서는 반드시 permitAll()이 이루어져야 한다.
-        // 권한이 필요없는 모든 요청을 여기다가 담아준다. 즉 PERMIT ALL에 해당하는 요청들
-        if (request.getServletPath().equals("/api/v1/user/refresh") || request.getServletPath().equals("/api/v1/user/login")
-        || request.getServletPath().equals("/api/v1/user/signup") || request.getServletPath().equals("/api/v1/user/home") ) {
-            filterChain.doFilter(request, response);
-        }else{
             String accessToken = resolveToken(request.getHeader(AUTHORIZATION));
 
             if (accessToken != null) {
@@ -68,9 +72,6 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 request.setAttribute("exception","로그인이 필요한 서비스입니다.");
                 filterChain.doFilter(request, response);
             }
-        }
-
-
     }
 
     /**
@@ -78,5 +79,11 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
      */
     private String resolveToken(String authorization) {
         return authorization != null ? authorization.substring(7) : null; // "bearer " 짤라낸다.
+    }
+
+    // Filter에서 제외할 URL 설정, 해당 method에 걸리는 path는 다음 filterChain으로 넘어간다.
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        return EXCLUDE_URL.stream().anyMatch(exclude -> exclude.equalsIgnoreCase(request.getServletPath()));
     }
 }
