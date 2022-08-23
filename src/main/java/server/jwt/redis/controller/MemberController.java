@@ -90,14 +90,22 @@ public class MemberController {
 
     @GetMapping("/logout")
     @ResponseBody
-    public ResponseEntity<BasicResponse> logout(@CookieValue(name="refreshToken") String refreshToken, HttpServletRequest request) {
+    public ResponseEntity<BasicResponse> logout(@CookieValue(name="refreshToken") String refreshToken, HttpServletRequest request,
+                                                HttpServletResponse response) throws IOException {
 
         String accessToken = request.getHeader(AUTHORIZATION).substring(7);
 
         memberService.logout(accessToken, refreshToken);
 
-        BasicResponse response = new BasicResponse("로그아웃 성공", HttpStatus.OK);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        // logout 시 refresh token 삭제
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", null)
+                .maxAge(0) // 1 day
+                .build();
+
+        response.setHeader("Set-Cookie",cookie.toString());
+
+        BasicResponse responseOfBasic = new BasicResponse("로그아웃 성공", HttpStatus.OK);
+        return new ResponseEntity<>(responseOfBasic, HttpStatus.OK);
     }
 
 
