@@ -86,12 +86,12 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         tokens.put("accessToken" ,  accessToken);
         //tokens.put("refreshToken" , refreshToken); -> refresh token은 쿠키게 담아주기 위해서
 
+        // 응답시 정해진 형식에 맞춰서 응답, status, message , data를 담아서 응답한다.
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding("UTF-8");
 
         DefaultDataResponse<Map<String, String>> loginSuccessRes = DefaultDataResponse.of(HttpStatus.OK.value(), "로그인 성공", tokens);
-
         response.getWriter().write(new ObjectMapper().writeValueAsString(loginSuccessRes));
     }
 }

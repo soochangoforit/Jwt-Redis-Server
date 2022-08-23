@@ -50,11 +50,16 @@ public class MemberController {
         return "loginPage";
     }
 
+    /**
+     * 회원가입 성공시 200
+     * 중복된 회원 존재 혹은 비밀번호 형식이 맞지 않는 경우 400 Bad Request 응답
+     * @param signUpUser 회원가입 요청 DTO
+     */
     @PostMapping("/signup")
     @ResponseBody
     public ResponseEntity<BasicResponse> signUp(@RequestBody SignUpRequestDto signUpUser) {
         memberService.signUp(signUpUser.getUsername(), signUpUser.getPassword() , signUpUser.getEmail() , signUpUser.getNickname());
-        BasicResponse response = new BasicResponse("회원가입 성공", HttpStatus.CREATED);
+        BasicResponse response = new BasicResponse(HttpStatus.CREATED.value(), "회원가입 성공");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -104,7 +109,7 @@ public class MemberController {
 
         response.setHeader("Set-Cookie",cookie.toString());
 
-        BasicResponse responseOfBasic = new BasicResponse("로그아웃 성공", HttpStatus.OK);
+        BasicResponse responseOfBasic = new BasicResponse(HttpStatus.OK.value(),"로그아웃 성공" );
         return new ResponseEntity<>(responseOfBasic, HttpStatus.OK);
     }
 

@@ -32,7 +32,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         String exception = (String) request.getAttribute("exception");
         setResponse(response);
-        BasicResponse exceptionDto = new BasicResponse(exception, HttpStatus.FORBIDDEN);
+        BasicResponse exceptionDto = new BasicResponse(HttpStatus.FORBIDDEN.value(),exception);
         response.getWriter().print(convertObjectToJson(exceptionDto));
     }
 

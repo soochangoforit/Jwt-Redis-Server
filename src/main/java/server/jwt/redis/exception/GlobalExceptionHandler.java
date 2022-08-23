@@ -12,9 +12,13 @@ import server.jwt.redis.dto.response.BasicResponse;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
+    /**
+     * 400 Bad Request
+     * 클라이언트가 잘못된 요청을 해서 서버가 요청을 처리할 수 없음
+     */
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<BasicResponse> handle(BadRequestException e) {
-        BasicResponse exceptionDto = new BasicResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
+        BasicResponse exceptionDto = new BasicResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         return new ResponseEntity<>(exceptionDto, HttpStatus.BAD_REQUEST);
     }
 
@@ -23,7 +27,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<BasicResponse> handle(BadCredentialsException e) {
-        BasicResponse exceptionDto = new BasicResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+        BasicResponse exceptionDto = new BasicResponse(HttpStatus.UNAUTHORIZED.value(),e.getMessage());
         return new ResponseEntity<>(exceptionDto, HttpStatus.UNAUTHORIZED);
     }
 
