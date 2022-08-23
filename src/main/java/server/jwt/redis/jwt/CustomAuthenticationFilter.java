@@ -2,18 +2,18 @@ package server.jwt.redis.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.stereotype.Component;
 import server.jwt.redis.domain.Member;
 import server.jwt.redis.dto.request.LoginRequestDto;
+import server.jwt.redis.dto.response.DefaultDataResponse;
 import server.jwt.redis.service.RequestService;
 
 import javax.servlet.FilterChain;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -88,7 +88,10 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_OK);
+        response.setCharacterEncoding("UTF-8");
 
-        response.getWriter().write(new ObjectMapper().writeValueAsString(tokens));
+        DefaultDataResponse<Map<String, String>> loginSuccessRes = DefaultDataResponse.of(HttpStatus.OK.value(), "로그인 성공", tokens);
+
+        response.getWriter().write(new ObjectMapper().writeValueAsString(loginSuccessRes));
     }
 }
