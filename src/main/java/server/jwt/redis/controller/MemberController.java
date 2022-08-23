@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.WebUtils;
+import server.jwt.redis.domain.Member;
 import server.jwt.redis.domain.enums.Role;
 import server.jwt.redis.dto.request.AccessTokenForLogout;
 import server.jwt.redis.dto.request.RefreshTokenRequestDto;
@@ -21,6 +22,7 @@ import server.jwt.redis.dto.response.LoginResponseDto;
 import server.jwt.redis.exception.BadRequestException;
 import server.jwt.redis.jwt.JwtProvider;
 import server.jwt.redis.jwt.PrincipalDetails;
+import server.jwt.redis.repository.MemberRepository;
 import server.jwt.redis.service.MemberService;
 import server.jwt.redis.service.RequestService;
 
@@ -44,7 +46,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final RequestService requestService;
-    private final JwtProvider jwtProvider;
+    private final MemberRepository memberRepository;
 
     @GetMapping("/home")
     public String login() {
@@ -91,7 +93,9 @@ public class MemberController {
     @GetMapping("/test")
     @ResponseBody
     public String test(@AuthenticationPrincipal String id) {
-        return id;
+
+        Member member = memberRepository.findById(Long.parseLong(id)).get();
+        return member.getUsername() + "님 환영합니다.";
     }
 
     @GetMapping("/logout")
