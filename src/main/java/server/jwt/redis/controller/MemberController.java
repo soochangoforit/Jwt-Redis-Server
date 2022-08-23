@@ -16,6 +16,7 @@ import server.jwt.redis.dto.request.AccessTokenForLogout;
 import server.jwt.redis.dto.request.RefreshTokenRequestDto;
 import server.jwt.redis.dto.request.SignUpRequestDto;
 import server.jwt.redis.dto.response.BasicResponse;
+import server.jwt.redis.dto.response.DefaultDataResponse;
 import server.jwt.redis.dto.response.LoginResponseDto;
 import server.jwt.redis.exception.BadRequestException;
 import server.jwt.redis.jwt.JwtProvider;
@@ -66,7 +67,7 @@ public class MemberController {
 
     @GetMapping(value = "/refresh")
     @ResponseBody
-    public ResponseEntity<LoginResponseDto> reIssue(@CookieValue(name = "refreshToken") String refreshToken ,HttpServletRequest request,
+    public ResponseEntity<DefaultDataResponse> reIssue(@CookieValue(name = "refreshToken") String refreshToken ,HttpServletRequest request,
                                                     HttpServletResponse response) throws IOException {
 
         String clientIp = requestService.getClientIp(request);
@@ -84,7 +85,7 @@ public class MemberController {
 
         response.setHeader("Set-Cookie",cookie.toString());
 
-        return new ResponseEntity<>(responseDto, HttpStatus.OK);
+        return new ResponseEntity<>(DefaultDataResponse.of(HttpStatus.OK.value(), "재발급 성공" ,responseDto), HttpStatus.OK);
     }
 
     @GetMapping("/test")
