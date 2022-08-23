@@ -78,7 +78,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
                 .maxAge(1 * 24 * 60 * 60) // 1 day
                 .httpOnly(true)
                 .path("/")
-                .secure(true)
                 .build();
 
         response.setHeader("Set-Cookie",cookie.toString());

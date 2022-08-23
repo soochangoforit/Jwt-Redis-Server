@@ -14,6 +14,7 @@ import server.jwt.redis.jwt.JwtProvider;
 import server.jwt.redis.repository.MemberRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +48,7 @@ public class MemberService {
     }
 
 
-    public LoginResponseDto reIssueAccessToken(String refreshToken, String clientIp) {
+    public Map<String, String> reIssueAccessToken(String refreshToken, String clientIp) {
 
         // 유효성 검증이 어차피 존재하지 않는 refresh token이면 redis에서 걸러주지만 먼저 걸러주는 작업을 해보도록 하자
         // refresh token에 문제가 있으면 Exception을 반환한다.
@@ -70,7 +71,13 @@ public class MemberService {
         }else{
             throw new BadRequestException("해킹이 의심되거나 혹은 refresh token을 요청한 IP주소가 달라졌습니다.");
         }
-        return new LoginResponseDto(newAccessToken, newRefreshToken);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("accessToken", newAccessToken);
+        map.put("refreshToken", newRefreshToken);
+
+
+        return map;
     }
 
 

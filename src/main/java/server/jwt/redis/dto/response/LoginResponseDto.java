@@ -8,6 +8,6 @@ import lombok.Getter;
 public class LoginResponseDto {
 
     private String accessToken;
-    private String refreshToken;
+    // private String refreshToken; refresh token은 cookie로 들어간다.
 
 }

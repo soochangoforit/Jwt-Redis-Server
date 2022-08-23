@@ -5,10 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.WebUtils;
 import server.jwt.redis.domain.enums.Role;
 import server.jwt.redis.dto.request.AccessTokenForLogout;
 import server.jwt.redis.dto.request.RefreshTokenRequestDto;
@@ -22,11 +24,13 @@ import server.jwt.redis.service.MemberService;
 import server.jwt.redis.service.RequestService;
 
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -57,14 +61,23 @@ public class MemberController {
 
     @GetMapping(value = "/refresh")
     @ResponseBody
-    public ResponseEntity<LoginResponseDto> reIssue(@CookieValue(name="refreshToken") String refreshToken , HttpServletRequest request) throws IOException {
+    public ResponseEntity<LoginResponseDto> reIssue(@CookieValue(name = "refreshToken") String refreshToken ,HttpServletRequest request,
+                                                    HttpServletResponse response) throws IOException {
 
         String clientIp = requestService.getClientIp(request);
 
-        LoginResponseDto responseDto = memberService.reIssueAccessToken(refreshToken, clientIp);
+        Map<String, String> tokenMap = memberService.reIssueAccessToken(refreshToken, clientIp);
 
-        // todo : refresh token은 바로 cookie에 넣어주자
+        LoginResponseDto responseDto = new LoginResponseDto(tokenMap.get("accessToken"));
 
+        // refresh token은 cookie에 담아주기
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", tokenMap.get("refreshToken"))
+                .maxAge(1 * 24 * 60 * 60) // 1 day
+                .httpOnly(true)
+                .path("/")
+                .build();
+
+        response.setHeader("Set-Cookie",cookie.toString());
 
         return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }
