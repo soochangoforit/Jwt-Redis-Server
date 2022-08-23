@@ -40,6 +40,9 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     @Value("${spring.jwt.blacklist.access-token}")
     private String blackListATPrefix;
 
+    /**
+     * 접근 권한이 필요한 모든 요청이 들어온다. 권한이 필요없는 요청인 경우 EXCLUDE_URL에 의헤서 다음 filter로 넘어간다.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                                                 throws IOException, ServletException {

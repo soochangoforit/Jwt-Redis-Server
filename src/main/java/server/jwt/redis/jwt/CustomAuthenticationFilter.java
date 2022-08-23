@@ -10,6 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import server.jwt.redis.domain.Member;
 import server.jwt.redis.dto.request.LoginRequestDto;
+import server.jwt.redis.dto.response.BasicResponse;
 import server.jwt.redis.dto.response.DefaultDataResponse;
 import server.jwt.redis.dto.response.LoginResponseDto;
 import server.jwt.redis.service.RequestService;
@@ -29,9 +30,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     private final CustomAuthenticationManager customAuthenticationManager;
     private final JwtProvider jwtProvider;
     private final RequestService requestService;
-
-
-
 
 
     // /login post 요청이 올때 해당 메소드를 우선적으로 거친다.
@@ -93,4 +91,13 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         DefaultDataResponse<LoginResponseDto> loginSuccessResponse = DefaultDataResponse.of(HttpStatus.OK.value(), "로그인 성공", responseDto);
         response.getWriter().write(new ObjectMapper().writeValueAsString(loginSuccessResponse));
     }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
+        response.setContentType(APPLICATION_JSON_VALUE);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(new ObjectMapper().writeValueAsString(new BasicResponse(HttpStatus.BAD_REQUEST.value(), failed.getMessage())));
+    }
+
 }

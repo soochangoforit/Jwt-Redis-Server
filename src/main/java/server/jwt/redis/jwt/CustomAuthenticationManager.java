@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
+import server.jwt.redis.exception.BadRequestException;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ public class CustomAuthenticationManager implements AuthenticationManager {
                 (PrincipalDetails) principalDetailsService.loadUserByUsername(authentication.getName());
 
         if (!bCryptPasswordEncoder.matches(authentication.getCredentials().toString(), principalDetails.getPassword())) {
-            throw new BadCredentialsException("비밀번호를 확인하세요");
+            throw new AuthenticationException("비밀번호를 확인하세요"){};
         }
 
         return new UsernamePasswordAuthenticationToken(principalDetails, principalDetails.getPassword(), principalDetails.getAuthorities());
