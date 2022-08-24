@@ -69,12 +69,12 @@ public class MemberController {
 
     @GetMapping(value = "/refresh")
     @ResponseBody
-    public ResponseEntity<DefaultDataResponse> reIssue(@CookieValue(name = "refreshToken") String refreshToken ,HttpServletRequest request,
+    public ResponseEntity<DefaultDataResponse> reIssue(@CookieValue(name = "refreshToken") String oldRefreshToken ,HttpServletRequest request,
                                                     HttpServletResponse response) throws IOException {
 
         String clientIp = requestService.getClientIp(request);
 
-        Map<String, String> tokenMap = memberService.reIssueAccessToken(refreshToken, clientIp);
+        Map<String, String> tokenMap = memberService.reIssueAccessToken(oldRefreshToken, clientIp);
 
         LoginResponseDto responseDto = new LoginResponseDto(tokenMap.get("accessToken"));
 

@@ -19,8 +19,6 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -70,7 +68,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         Member member = principal.getMember();
 
         String accessToken = jwtProvider.createAccessToken( member.getId(), member.getRole());
-        String refreshToken = jwtProvider.createRefreshToken(member.getId() ,clientIp);
+        String refreshToken = jwtProvider.createRefreshTokenWithLogin(member.getId() ,clientIp);
 
         // refresh token은 cookie에 담아주기
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)

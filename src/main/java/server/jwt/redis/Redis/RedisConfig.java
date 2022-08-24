@@ -31,6 +31,10 @@ public class RedisConfig {
         return new LettuceConnectionFactory(host, port);
     }
 
+    /**
+     * key : refresh token
+     * value : client ip, user id
+     */
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
@@ -42,6 +46,40 @@ public class RedisConfig {
 
         return redisTemplate;
     }
+
+
+    /**
+     * key : userId
+     * value : refresh token
+     */
+    @Bean
+    public RedisTemplate<String, String> redisTemplateForUserId() {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+
+        return redisTemplate;
+    }
+
+    /**
+     * key : oldRefreshToken
+     * value :  String : "duplicateLogin"
+     */
+    @Bean
+    public RedisTemplate<String, String> redisTemplateForDuplicateLogin() {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+
+        return redisTemplate;
+    }
+
 
 
 }

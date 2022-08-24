@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import server.jwt.redis.Redis.RedisService;
 import server.jwt.redis.domain.enums.Role;
+import server.jwt.redis.exception.DuplicateException;
 import server.jwt.redis.repository.MemberRepository;
 
 import javax.annotation.PostConstruct;
@@ -48,10 +49,35 @@ public class JwtProvider {
         return this.createTokenForAccess(userId,role ,tokenInvalidTime);
     }
 
-    public String createRefreshToken(Long userId, String clientIp) {
+    public String createRefreshTokenWithLogin(Long userId, String clientIp) {
         Long tokenInvalidTime = 1000L * 60 * 60 * 24; // 1day
         String refreshToken = this.createTokenForRefresh(tokenInvalidTime);
-        redisService.setRefreshValues(refreshToken, clientIp , userId, Duration.ofMillis(tokenInvalidTime)); // redis에서 기간도 함께 설정
+
+        // todo : 우선적으로 userID를 key값으로 해서 refresh token이 있는지 확인하는 작업 필요
+        String oldToken = redisService.findTokenByUserId(userId);
+
+        // todo : key값으로 userID가 없다는 말은 최초 로그인 의미 -> 바로 userID를 key 값, 처음으로 만든 refresh token을 value 값으로 저장한다.
+        // todo : refresh token을 key값으로 하는 작업도 필요하다.
+        if(oldToken == null) {
+            redisService.setUserIdWithRefreshToken(userId, refreshToken , Duration.ofMillis(tokenInvalidTime));
+            redisService.setRefreshValues(refreshToken, clientIp , userId, Duration.ofMillis(tokenInvalidTime));
+        }else{
+            // todo : oldToken이 존재하면 그것이 곧 앞전의 토큰이다.
+            redisService.deleteRefreshToken(oldToken);
+            // todo : oldToken을 다시 key 값으로 하는 Message 큐를 만든다. -> refresh token의 기존 유효시간과 같게 한다. -> 나중에 oldRefresh Token으로 재발급을 요청해도 유효기간 지나면 쓸모 없어지기 때문에 앞단에서 유효성 검사를 통해서 걸러진다.
+            redisService.setOldTokenToMessageQueue(oldToken , "duplicate", Duration.ofMillis(tokenInvalidTime));
+
+            redisService.setUserIdWithRefreshToken(userId, refreshToken , Duration.ofMillis(tokenInvalidTime));
+            redisService.setRefreshValues(refreshToken, clientIp , userId, Duration.ofMillis(tokenInvalidTime));
+        }
+
+
+        // todo : key값으로 userId가 존재한다. -> 앞전에 로그인한 흔적이 있다는 의미 (redis에 남아 있다는 의미는 중복 로그인이며, 아직토큰이 유효하다.)
+        // todo : userId에 해당하는 refresh token을 찾는다. -> 완료 -> oldToken
+        // todo : refresh token을 key값으로 하는 데이터를 삭제한다. -> 완료
+        // todo : userId를 key 값으로 하는 데이터에 new refresh token을 저장한다. -> 완료
+        // todo : new refresh token을 key 값으로 하는 데이터를 추가한다.
+
         return refreshToken;
     }
 
@@ -144,20 +170,33 @@ public class JwtProvider {
     }
 
 
-    public Map<String, String> checkRefreshToken(String refreshToken, String clientIp) {
+    public Map<String, String> checkRefreshToken(String oldRefreshToken, String clientIp) {
 
-        Map<String, String> valuesFromRedis = redisService.getValuesForClientIp(refreshToken);
-        // 첫요청한 refresh token이 아직 유효하면서도 올바른 요청의 ip인 경우
-        // 탈취 된 token 혹은 이전에 요청한 ip가 아닌 경우
-        if(valuesFromRedis.get("realClientIp").equals(clientIp)){
-            return valuesFromRedis;
+        // todo : 우선적으로 oldRefreshToken을 가지고 "중복" redis에 존재하는지 확인한다.
+        String isDuplicate = redisService.findOldTokenFromDuplicate(oldRefreshToken);
+
+        if(isDuplicate != null && isDuplicate.equals("duplicate")) {
+            // todo : 존재 O -> "duplicate" 라는 메시지가 담기는 경우 -> 중복 로그인에 의해서 발생 -> 중복 로그인 시점부터 refresh token lify cycle만큼 유요하게 redis에 저장되어 있다.
+            throw new DuplicateException("토큰 재발급에 앞서, 중복 로그인이 감지 되었습니다.");
+        }else{
+            // todo : 존재 O -> clietIp 와 userId로 데이터가 구성된 경우 -> 중복 로그인은 발생하지 X
+            Map<String, String> valuesFromRedis = redisService.getValuesForClientIp(oldRefreshToken);
+            // 첫요청한 refresh token이 아직 유효하면서도 올바른 요청의 ip인 경우
+            // 탈취 된 token 혹은 이전에 요청한 ip가 아닌 경우
+            if(valuesFromRedis.get("realClientIp").equals(clientIp)){
+                return valuesFromRedis;
+            }
+            return null;
         }
-        return null;
     }
 
     public void logout(String accessToken, String refreshToken){
         // 로그아웃 하려는 사용자의 refresh token 을 redis에서 삭제한다.
         redisService.deleteRefreshToken(refreshToken);
+
+        // 로그아웃시 access token의 id를 가져와서 삭제를 진행
+        String userId = this.getDb_Id(accessToken); // db_id
+        redisService.deleteByUserId(userId);
 
         Long expiration = getExpiration(accessToken);
 
@@ -175,6 +214,13 @@ public class JwtProvider {
     }
 
 
+    public String createRefreshTokenWithReissue(Long userId, String clientIp) {
+        Long tokenInvalidTime = 1000L * 60 * 60 * 24; // 1day
+        String newRefreshToken = this.createTokenForRefresh(tokenInvalidTime); // new refresh token 재발급
 
+        redisService.setUserIdWithRefreshToken(userId, newRefreshToken, Duration.ofMillis(tokenInvalidTime)); // UserId에 덮어쓰기
+        redisService.setRefreshValues(newRefreshToken, clientIp, userId, Duration.ofMillis(tokenInvalidTime));
 
+        return newRefreshToken;
+    }
 }

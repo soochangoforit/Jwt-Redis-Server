@@ -9,14 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import server.jwt.redis.Redis.RedisService;
 import server.jwt.redis.domain.Member;
 import server.jwt.redis.domain.enums.Role;
-import server.jwt.redis.dto.response.LoginResponseDto;
-import server.jwt.redis.exception.BadRequestException;
 import server.jwt.redis.jwt.JwtProvider;
 import server.jwt.redis.repository.MemberRepository;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -49,19 +45,19 @@ public class MemberService {
     }
 
 
-    public Map<String, String> reIssueAccessToken(String refreshToken, String clientIp) {
+    public Map<String, String> reIssueAccessToken(String oldRefreshToken, String clientIp) {
 
         // 유효성 검증이 어차피 존재하지 않는 refresh token이면 redis에서 걸러주지만 먼저 걸러주는 작업을 해보도록 하자
         // refresh token에 문제가 있으면 Exception을 반환한다.
         // error -> return BadCredentialsException (토큰 형식, 유효성 문제)
-        jwtProvider.validateRefreshToken(refreshToken);
+        jwtProvider.validateRefreshToken(oldRefreshToken);
 
         // refresh token이 redis이 존재하는지 확인 -> 존재하면 유효한 토큰이므로 발급
         // error -> return BadRequestException (존재하지 않는 토큰일 경우)
-        Map<String, String> redisValueMap = jwtProvider.checkRefreshToken(refreshToken, clientIp);
+        Map<String, String> redisValueMap = jwtProvider.checkRefreshToken(oldRefreshToken, clientIp);
 
         // 올바른 요청이든 , 그렇지 않든 무조건 일단 삭제한다.
-        redisService.deleteRefreshToken(refreshToken);
+        redisService.deleteRefreshToken(oldRefreshToken);
 
         // 유효하면 Availability true, 유효하지 않으면 false
         String newAccessToken = null;
@@ -69,7 +65,9 @@ public class MemberService {
         if(redisValueMap != null) {
             String userId = redisValueMap.get("userId");
             newAccessToken = jwtProvider.createAccessToken(Long.parseLong(userId), Role.ROLE_USER);
-            newRefreshToken = jwtProvider.createRefreshToken(Long.parseLong(userId), clientIp);
+            //newRefreshToken = jwtProvider.createRefreshTokenWithLogin(Long.parseLong(userId), clientIp);
+            newRefreshToken = jwtProvider.createRefreshTokenWithReissue(Long.parseLong(userId), clientIp);
+
         }else{
             throw new BadCredentialsException("해킹이 의심되거나 혹은 refresh token을 요청한 IP주소가 달라졌습니다.");
         }
