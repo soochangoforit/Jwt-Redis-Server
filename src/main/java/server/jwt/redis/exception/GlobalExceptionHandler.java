@@ -31,4 +31,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(exceptionDto, HttpStatus.UNAUTHORIZED);
     }
 
+    /**
+     * 중복 로그인에 의해서 발생한 Exception을 처리
+     */
+    @ExceptionHandler(DuplicateException.class)
+    public ResponseEntity<BasicResponse> handle(DuplicateException e) {
+        BasicResponse exceptionDto = new BasicResponse(HttpStatus.UNAUTHORIZED.value(),e.getMessage());
+        return new ResponseEntity<>(exceptionDto, HttpStatus.UNAUTHORIZED);
+    }
+
 }
