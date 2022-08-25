@@ -16,7 +16,7 @@
 
 ### ✅Redis : key - value
 
-![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%201.png)
+![1](https://user-images.githubusercontent.com/91618389/186608275-6b02ba78-ab5c-434f-8c24-b2c7f42d00ae.png)
 
 - Redis에 Token을 넣어서 관리함으로써, Client가 가지고 있는 Token들에 대해서 관리하기 위해서
 → 일종의 Session과 비슷한 역할을 담당하고 있다.
@@ -37,7 +37,7 @@
         - 처음 IP와 맞지 않다고 생각하여, 재로그인 필요
     
 
-![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%202.png)
+![2](https://user-images.githubusercontent.com/91618389/186608418-421073ae-216f-41df-af4c-23150dd5e389.png)
 
 - private 변수로 Access token을 저장하게 되면서 Refresh Token을 재발급해야 한다. 이를 위해서는 UserID가 필요하다.
 - 데이터 액세스 접근 권한이 있는 UserID를 담은 Access Token이 유지되는 기가은 길면 좋지 않다.
@@ -49,12 +49,12 @@
 
 - Session은 하나의 WAS가 종료되면 Session도 삭제가 된다.
 
-![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%203.png)
+![3](https://user-images.githubusercontent.com/91618389/186608547-0139aef7-bacc-47bf-9e3c-8cb54eb06b68.png)
 
 - Redis에 Refresh Token을 저장함으로써, WAS가 종료되어도 데이터가 지워지지 않는다.
 Redis를 담당하고 있는 서버를 완전 리부팅 하는 경우에만 리셋된다.
 
-![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%204.png)
+![4](https://user-images.githubusercontent.com/91618389/186608664-fa3e4b64-50af-414e-99c7-887758075db5.png)
 
 - WAS1과 WAS2가 존재하고 만약 **무중단 배포를 위해 두 WAS를 스위치 껐다다 키듯 왔다갔다 하며 사용한다 가정**
 - WAS에서 다른 WAS로 실행을 이동해도 똑같은 Redis를 공유하기 때문에 세션과 달리 유지가 지속된다.
@@ -126,11 +126,11 @@ Redis를 담당하고 있는 서버를 완전 리부팅 하는 경우에만 리�
 
 - ✅로그인
     
-    ![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%205.png)
+    ![5](https://user-images.githubusercontent.com/91618389/186608843-9fa81e1d-a13d-4a19-917b-e61df4112b7e.png)
     
     로그인 성공시 Response Body에 Access Token 반환
     
-    ![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%206.png)
+    ![6](https://user-images.githubusercontent.com/91618389/186609199-b21372e8-37ab-4f46-bec4-8a6a96c69f3a.png)
     
     → 로그인 성공시 Redis의 Key 값으로 Refresh Token 할당
     
@@ -139,15 +139,14 @@ Redis를 담당하고 있는 서버를 완전 리부팅 하는 경우에만 리�
 
 - ✅인증이 필요한 요청
     
-    ![Header Authorization에 Access Token 담아서 요청](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%207.png)
+    ![7](https://user-images.githubusercontent.com/91618389/186609208-05650c38-1652-4562-9e7c-86f5e8e6007f.png)
     
     Header Authorization에 Access Token 담아서 요청
     
 
 - ✅토큰 재발급
     
-    ![Refresh Token만 Cookie에 담는다.
-    재발급시 기존의 Refresh Token은 Redis에서 사라지고, 새로운 Refresh Token이 저장된다.](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%208.png)
+    ![8](https://user-images.githubusercontent.com/91618389/186609227-6cfa127a-30fe-452c-9762-13acc0a6b596.png)
     
     Refresh Token만 Cookie에 담는다.
     재발급시 기존의 Refresh Token은 Redis에서 사라지고, 새로운 Refresh Token이 저장된다.
@@ -155,8 +154,7 @@ Redis를 담당하고 있는 서버를 완전 리부팅 하는 경우에만 리�
 
 - ✅로그아웃
     
-    ![로그아웃 요청시 Header에 Access Token & Cookie에 Refresh Token 담아서 요청
-    해당 로그아웃 하고자 하는 계정이 가지고 있던 Refresh Token은 Redis에서 삭제됨](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%209.png)
+    ![9](https://user-images.githubusercontent.com/91618389/186609244-2c331ba7-9c16-4917-a779-24f63d42487f.png)
     
     로그아웃 요청시 Header에 Access Token & Cookie에 Refresh Token 담아서 요청
     해당 로그아웃 하고자 하는 계정이 가지고 있던 Refresh Token은 Redis에서 삭제됨
@@ -165,12 +163,12 @@ Redis를 담당하고 있는 서버를 완전 리부팅 하는 경우에만 리�
     
     토큰의 Prefix에 특정 String을 추가해서 Redis에 저장
     
-    ![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%2010.png)
+    ![10](https://user-images.githubusercontent.com/91618389/186609267-9cac1821-81e3-44eb-8c6f-4f0ae14b5e00.png)
     
 - ✅중복 로그인 방지
     
     
-    ![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%2011.png)
+    ![11](https://user-images.githubusercontent.com/91618389/186609282-b63f3cbf-99e9-49a4-a5e8-04f1f83b6a86.png)
     
     재로그인시 새로운 Refresh Token이 발급되고, 
     
@@ -178,6 +176,6 @@ Redis를 담당하고 있는 서버를 완전 리부팅 하는 경우에만 리�
     
     Duplicate Login으로 처리된 Refresh Token으로 Cookie를 통해서 재발급 요청시,
     
-    ![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled%2012.png)
+    ![12](https://user-images.githubusercontent.com/91618389/186609293-fc8c1be8-c059-4c63-ad62-902a80842a21.png)
     
     → 중복 로그인 때문에, 토큰을 재발급 받을 수 없어서 강제적으로 로그아웃이 가능하게 해야한다.
