@@ -2,7 +2,7 @@
 
 ### ✅Security + JWT 기본 동작 원리
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/f9fa3378-791a-4b8b-afc6-3be665840cca/Untitled.png)
+![Untitled](https://user-images.githubusercontent.com/91618389/186607982-3b6429fd-7007-4514-b3f2-9d19ad6f86ce.png)
 
 ### ✅Access Token
 
