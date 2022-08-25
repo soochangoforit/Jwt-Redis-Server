@@ -2,7 +2,7 @@
 
 ### ✅Security + JWT 기본 동작 원리
 
-![Untitled](Jwt-Redis-Server%2063195863b4ab4cd18d47b37201a90205/Untitled.png)
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/f9fa3378-791a-4b8b-afc6-3be665840cca/Untitled.png)
 
 ### ✅Access Token
 
