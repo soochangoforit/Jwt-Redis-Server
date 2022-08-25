@@ -163,7 +163,7 @@ Redis를 담당하고 있는 서버를 완전 리부팅 하는 경우에만 리�
     
     토큰의 Prefix에 특정 String을 추가해서 Redis에 저장
     
-    ![10](https://user-images.githubusercontent.com/91618389/186609267-9cac1821-81e3-44eb-8c6f-4f0ae14b5e00.png)
+    ![logout](https://user-images.githubusercontent.com/91618389/186656614-7098fa7c-5c90-4657-b27f-8322d7ebc790.png)
     
 - ✅중복 로그인 방지
     
