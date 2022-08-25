@@ -2,24 +2,22 @@ package server.jwt.redis.jwt;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import server.jwt.redis.Redis.RedisValue;
+import server.jwt.redis.Redis.domain.LogoutToken;
+import server.jwt.redis.Redis.service.LogoutTokenService;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.stream;
+
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Component
@@ -27,7 +25,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final LogoutTokenService logoutTokenService;
 
     /**
      * refresh 요청 및 일반 권한이 필요없는 요청은 해당 필터를 거치지 않는다.
@@ -51,7 +49,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
             if (accessToken != null) {
                 // 사용하고자 하는 AccessToken이 Redis의 로그아웃된 AccessToken인지 아닌지 확인하는 절차
-                RedisValue isLogout = (RedisValue) redisTemplate.opsForValue().get(blackListATPrefix + accessToken);
+                LogoutToken isLogout = logoutTokenService.findLogoutToken(blackListATPrefix + accessToken);
 
                 // 로그아웃되어 redis에 black list로 올라온 access token에 대해서는 접근이 불가능하다.
                 if(isLogout != null){

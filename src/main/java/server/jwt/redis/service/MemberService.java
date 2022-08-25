@@ -6,7 +6,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import server.jwt.redis.Redis.RedisService;
+import server.jwt.redis.Redis.domain.TokenToIpWithId;
 import server.jwt.redis.domain.Member;
 import server.jwt.redis.domain.enums.Role;
 import server.jwt.redis.jwt.JwtProvider;
@@ -25,7 +25,6 @@ public class MemberService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final DuplicateService duplicateService;
-    private final RedisService redisService;
 
     /**
      * 회원가입 시나리오는 다음과 같다.
@@ -54,18 +53,17 @@ public class MemberService {
 
         // refresh token이 redis이 존재하는지 확인 -> 존재하면 유효한 토큰이므로 발급
         // error -> return BadRequestException (존재하지 않는 토큰일 경우)
-        Map<String, String> redisValueMap = jwtProvider.checkRefreshToken(oldRefreshToken, clientIp);
+        TokenToIpWithId tokenToIpWithId = jwtProvider.checkRefreshToken(oldRefreshToken, clientIp);
 
         // 올바른 요청이든 , 그렇지 않든 무조건 일단 삭제한다.
-        redisService.deleteRefreshToken(oldRefreshToken);
+        jwtProvider.deleteOldRefreshTokenAsKey(oldRefreshToken);
 
         // 유효하면 Availability true, 유효하지 않으면 false
         String newAccessToken = null;
         String newRefreshToken = null;
-        if(redisValueMap != null) {
-            String userId = redisValueMap.get("userId");
+        if(tokenToIpWithId != null) {
+            String userId = tokenToIpWithId.getUserId();
             newAccessToken = jwtProvider.createAccessToken(Long.parseLong(userId), Role.ROLE_USER);
-            //newRefreshToken = jwtProvider.createRefreshTokenWithLogin(Long.parseLong(userId), clientIp);
             newRefreshToken = jwtProvider.createRefreshTokenWithReissue(Long.parseLong(userId), clientIp);
 
         }else{
@@ -75,7 +73,6 @@ public class MemberService {
         Map<String, String> map = new HashMap<>();
         map.put("accessToken", newAccessToken);
         map.put("refreshToken", newRefreshToken);
-
 
         return map;
     }
