@@ -2,8 +2,11 @@ package server.jwt.redis.jwt;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -20,9 +23,12 @@ import java.util.List;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
+/**
+ * SecurityConfig에서 정의한 권한이 필요한 요청은 해당 Filter를 거친다.
+ * 권한이 필요없는 permitAll에 대해서는 해당 Filter를 거치지 않는다.
+ */
 @Component
-@RequiredArgsConstructor
-public class CustomAuthorizationFilter extends OncePerRequestFilter {
+public class CustomAuthorizationFilter extends BasicAuthenticationFilter {
 
     private final JwtProvider jwtProvider;
     private final LogoutTokenService logoutTokenService;
@@ -32,11 +38,18 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
      * 대신 config에 해당 url에 대해서는 반드시 permitAll()이 이루어져야 한다.
      * 권한이 필요없는 모든 요청을 여기다가 담아준다. 즉 PERMIT ALL에 해당하는 요청들
      */
-    private static final List<String> EXCLUDE_URL = List.of(
-            "/api/v1/user/refresh", "/api/v1/user/signup", "/api/v1/user/login", "/api/v1/user/home");
+//    private static final List<String> EXCLUDE_URL = List.of(
+//            "/api/v1/user/refresh", "/api/v1/user/signup", "/api/v1/user/login", "/api/v1/user/home");
 
     @Value("${spring.jwt.blacklist.access-token}")
     private String blackListATPrefix;
+
+    public CustomAuthorizationFilter(AuthenticationManager authenticationManager, JwtProvider jwtProvider, LogoutTokenService logoutTokenService) {
+        super(authenticationManager);
+        this.jwtProvider = jwtProvider;
+        this.logoutTokenService = logoutTokenService;
+    }
+
 
     /**
      * 접근 권한이 필요한 모든 요청이 들어온다. 권한이 필요없는 요청인 경우 EXCLUDE_URL에 의헤서 다음 filter로 넘어간다.
@@ -71,6 +84,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
             } else {
                 // 로그인에 필요한 서비스에 접근했는데 Header에 토큰이 없는 경우
+                // todo : 주석 처리, 만약 BasicAuthenticationFilter로 통해서 인증이 필요한 부분에 대해 들어오는데
+                // todo : 아무런 권한이 없으면 AccessDeinedHandler로 넘어가는지 확인 필요
                 request.setAttribute("exception","로그인이 필요한 서비스입니다.");
                 filterChain.doFilter(request, response);
             }
@@ -84,8 +99,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     }
 
     // Filter에서 제외할 URL 설정, 해당 method에 걸리는 path는 다음 filterChain으로 넘어간다.
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        return EXCLUDE_URL.stream().anyMatch(exclude -> exclude.equalsIgnoreCase(request.getServletPath()));
-    }
+//    @Override
+//    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+//        return EXCLUDE_URL.stream().anyMatch(exclude -> exclude.equalsIgnoreCase(request.getServletPath()));
+//    }
 }

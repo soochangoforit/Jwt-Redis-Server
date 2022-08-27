@@ -67,7 +67,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
                 .and()
                 .addFilter(customAuthenticationFilter)
-                .addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilter(customAuthorizationFilter)
+                //.addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .oauth2Login()
                 .successHandler(successHandler)

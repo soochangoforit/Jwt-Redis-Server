@@ -37,7 +37,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         this.requestService = requestService;
 
         // todo : filter를 bean으로 등록하는 과정에서 login url 설정 , 및 상위 AbstractAuthenticationProcessingFilter에 manager주입
-        super.setFilterProcessesUrl("api/v1/user/login");
+        super.setFilterProcessesUrl("/api/v1/user/login");
         super.setAuthenticationManager(customAuthenticationManager);
     }
 
