@@ -2,6 +2,7 @@ package server.jwt.redis.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -95,14 +96,16 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         response.setHeader("Set-Cookie",cookie.toString());
 
-        LoginResponseDto responseDto = new LoginResponseDto(accessToken);
+        response.addHeader("Authorization", "Bearer " + accessToken);
+
+        //LoginResponseDto responseDto = new LoginResponseDto(accessToken);
 
         // 응답시 정해진 형식에 맞춰서 응답, status, message , data를 담아서 응답한다.
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding("UTF-8");
 
-        DefaultDataResponse<LoginResponseDto> loginSuccessResponse = DefaultDataResponse.of(HttpStatus.OK.value(), "로그인 성공", responseDto);
+        BasicResponse loginSuccessResponse = BasicResponse.of(HttpStatus.OK.value(), "로그인 성공");
         response.getWriter().write(new ObjectMapper().writeValueAsString(loginSuccessResponse));
     }
 

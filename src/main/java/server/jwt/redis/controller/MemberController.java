@@ -69,14 +69,14 @@ public class MemberController {
 
     @GetMapping(value = "/refresh")
     @ResponseBody
-    public ResponseEntity<DefaultDataResponse> reIssue(@CookieValue(name = "refreshToken") String oldRefreshToken ,HttpServletRequest request,
+    public ResponseEntity<BasicResponse> reIssue(@CookieValue(name = "refreshToken") String oldRefreshToken ,HttpServletRequest request,
                                                     HttpServletResponse response) throws IOException {
 
         String clientIp = requestService.getClientIp(request);
 
         Map<String, String> tokenMap = memberService.reIssueAccessToken(oldRefreshToken, clientIp);
 
-        LoginResponseDto responseDto = new LoginResponseDto(tokenMap.get("accessToken"));
+        //LoginResponseDto responseDto = new LoginResponseDto(tokenMap.get("accessToken"));
 
         // refresh token은 cookie에 담아주기
         ResponseCookie cookie = ResponseCookie.from("refreshToken", tokenMap.get("refreshToken"))
@@ -87,7 +87,9 @@ public class MemberController {
 
         response.setHeader("Set-Cookie",cookie.toString());
 
-        return new ResponseEntity<>(DefaultDataResponse.of(HttpStatus.OK.value(), "재발급 성공" ,responseDto), HttpStatus.OK);
+        response.setHeader("Authorization", "Bearer " + tokenMap.get("accessToken"));
+
+        return new ResponseEntity<>(BasicResponse.of(HttpStatus.OK.value(), "재발급 성공"), HttpStatus.OK);
     }
 
     @GetMapping("/test")
@@ -108,7 +110,7 @@ public class MemberController {
         memberService.logout(accessToken, refreshToken);
 
         // logout 시 refresh token 삭제
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", null)
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .maxAge(0) // 1 day
                 .build();
 

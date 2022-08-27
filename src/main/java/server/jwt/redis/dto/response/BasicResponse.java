@@ -11,4 +11,8 @@ public class BasicResponse {
     private int status;
     private String message;
 
+    public static BasicResponse of(int status, String message) {
+        return new BasicResponse(status, message);
+    }
+
 }
