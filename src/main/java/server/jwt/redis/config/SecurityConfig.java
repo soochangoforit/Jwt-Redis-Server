@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -28,14 +29,13 @@ import server.jwt.redis.service.RequestService;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtProvider jwtProvider;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAuthorizationEntryPoint customAuthorizationEntryPoint;
-    private final CustomAuthenticationManager customAuthenticationManager;
-    private final RequestService requestService;
     private final CustomAuthorizationFilter customAuthorizationFilter;
     private final OAuth2SuccessHandler successHandler; // OAuth2 로그인 성공후 처리하는 핸들러
     private final PrincipalOauth2UserService principalOauth2UserService; // oauth2
+
+    private final CustomAuthenticationFilter customAuthenticationFilter;
 
     /**
      * SecurityFilterChain
@@ -52,9 +52,6 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(customAuthenticationManager,jwtProvider,requestService);
-        customAuthenticationFilter.setFilterProcessesUrl("/api/v1/user/login");
 
         http.cors().and().csrf().disable()
                 .exceptionHandling()

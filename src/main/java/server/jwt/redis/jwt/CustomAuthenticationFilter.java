@@ -8,6 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.stereotype.Component;
 import server.jwt.redis.domain.Member;
 import server.jwt.redis.dto.request.LoginRequestDto;
 import server.jwt.redis.dto.response.BasicResponse;
@@ -22,12 +23,27 @@ import java.io.IOException;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@RequiredArgsConstructor
+
+@Component
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final CustomAuthenticationManager customAuthenticationManager;
     private final JwtProvider jwtProvider;
     private final RequestService requestService;
+
+    public CustomAuthenticationFilter(CustomAuthenticationManager customAuthenticationManager, JwtProvider jwtProvider, RequestService requestService) {
+        this.customAuthenticationManager = customAuthenticationManager;
+        this.jwtProvider = jwtProvider;
+        this.requestService = requestService;
+
+        // todo : filter를 bean으로 등록하는 과정에서 login url 설정 , 및 상위 AbstractAuthenticationProcessingFilter에 manager주입
+        super.setFilterProcessesUrl("api/v1/user/login");
+        super.setAuthenticationManager(customAuthenticationManager);
+    }
+
+
+
+
 
 
     // /login post 요청이 올때 해당 메소드를 우선적으로 거친다.
@@ -39,11 +55,11 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         // 사용자가 입력했던 로그인 아이디, 비밀번호를 JSON형태로 받아서 갖는다.
         ObjectMapper objectMapper = new ObjectMapper();
-        LoginRequestDto loginRequestDto;
+        LoginRequestDto loginRequestDto = null;
         try {
             loginRequestDto = objectMapper.readValue(request.getInputStream(), LoginRequestDto.class);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         String clientIp = requestService.getClientIp(request);
@@ -67,7 +83,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
         Member member = principal.getMember();
 
-        String accessToken = jwtProvider.createAccessToken( member.getId(), member.getRole());
+        String accessToken = jwtProvider.createAccessToken(member.getId(), member.getRole());
         String refreshToken = jwtProvider.createRefreshTokenWithLogin(member.getId() ,clientIp);
 
         // refresh token은 cookie에 담아주기
