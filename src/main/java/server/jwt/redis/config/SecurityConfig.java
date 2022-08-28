@@ -3,20 +3,16 @@ package server.jwt.redis.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import server.jwt.redis.exception.CustomAuthenticationEntryPoint;
 import server.jwt.redis.exception.CustomAuthorizationEntryPoint;
 import server.jwt.redis.jwt.*;
-import server.jwt.redis.service.RequestService;
+import server.jwt.redis.jwt.oauth2.OAuth2SuccessHandler;
+import server.jwt.redis.jwt.oauth2.PrincipalOauth2UserService;
 
 /**
  * @EnableGlobalMethodSecurity(securedEnabled = true , prePostEnabled = true) 같은 경우는

@@ -61,7 +61,7 @@ public class MemberController {
     @PostMapping("/signup")
     @ResponseBody
     public ResponseEntity<BasicResponse> signUp(@RequestBody SignUpRequestDto signUpUser) {
-        memberService.signUp(signUpUser.getUsername(), signUpUser.getPassword() , signUpUser.getEmail() , signUpUser.getNickname());
+        memberService.signUp(signUpUser.getUsername(), signUpUser.getPassword() , signUpUser.getEmail() , signUpUser.getName());
         BasicResponse response = new BasicResponse(HttpStatus.CREATED.value(), "회원가입 성공");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

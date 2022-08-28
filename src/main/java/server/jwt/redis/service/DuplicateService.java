@@ -15,8 +15,8 @@ public class DuplicateService {
     /**
      *  전체 duplicate check method
      */
-    public void checkMemberIsDuplicate(String username, String email, String nickname) {
-        boolean isDuplicate = memberRepository.existsByUsernameAndEmailAndNickname(username,email,nickname);
+    public void checkMemberIsDuplicate(String username, String email){
+        boolean isDuplicate = memberRepository.existsByUsernameAndEmail(username,email);
         if(isDuplicate) {
             throw new BadRequestException("이미 존재하는 회원입니다.");
         }
@@ -52,15 +52,6 @@ public class DuplicateService {
         }
     }
 
-    /**
-     * check nickname duplicate method
-     */
-    public void checkNicknameIsDuplicate(String nickname) {
-        boolean isDuplicate = memberRepository.existsByNickname(nickname);
-        if(isDuplicate) {
-            throw new BadRequestException("이미 존재하는 닉네임입니다.");
-        }
-    }
 
 
 }
