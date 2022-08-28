@@ -3,19 +3,16 @@ package server.jwt.redis.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import server.jwt.redis.exception.CustomAuthenticationEntryPoint;
 import server.jwt.redis.exception.CustomAuthorizationEntryPoint;
 import server.jwt.redis.jwt.*;
-import server.jwt.redis.service.RequestService;
+import server.jwt.redis.jwt.oauth2.OAuth2SuccessHandler;
+import server.jwt.redis.jwt.oauth2.PrincipalOauth2UserService;
 
 /**
  * @EnableGlobalMethodSecurity(securedEnabled = true , prePostEnabled = true) 같은 경우는
@@ -28,14 +25,13 @@ import server.jwt.redis.service.RequestService;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtProvider jwtProvider;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAuthorizationEntryPoint customAuthorizationEntryPoint;
-    private final CustomAuthenticationManager customAuthenticationManager;
-    private final RequestService requestService;
     private final CustomAuthorizationFilter customAuthorizationFilter;
     private final OAuth2SuccessHandler successHandler; // OAuth2 로그인 성공후 처리하는 핸들러
     private final PrincipalOauth2UserService principalOauth2UserService; // oauth2
+
+    private final CustomAuthenticationFilter customAuthenticationFilter;
 
     /**
      * SecurityFilterChain
@@ -53,9 +49,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(customAuthenticationManager,jwtProvider,requestService);
-        customAuthenticationFilter.setFilterProcessesUrl("/api/v1/user/login");
-
         http.cors().and().csrf().disable()
                 .exceptionHandling()
                 .authenticationEntryPoint(customAuthenticationEntryPoint) // 인증이 되지 않는 사용자 접근시 처리할 entrypoint
@@ -70,7 +63,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
                 .and()
                 .addFilter(customAuthenticationFilter)
-                .addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilter(customAuthorizationFilter)
+                //.addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .oauth2Login()
                 .successHandler(successHandler)

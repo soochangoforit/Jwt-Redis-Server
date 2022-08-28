@@ -35,11 +35,11 @@ public class MemberService {
      * 회원가입
      */
     @Transactional
-    public void signUp(String username, String password , String email , String nickname) {
-        duplicateService.checkMemberIsDuplicate(username,email,nickname);
+    public void signUp(String username, String password , String email ,String name) {
+        duplicateService.checkMemberIsDuplicate(username,email);
         duplicateService.checkPasswordConversion(password);
         String encodedPassword = passwordEncoder.encode(password);
-        Member newAccount = Member.of(username, encodedPassword, email, nickname , Role.ROLE_USER);
+        Member newAccount = Member.of(username, encodedPassword, email, name , Role.ROLE_USER);
         memberRepository.save(newAccount);
     }
 

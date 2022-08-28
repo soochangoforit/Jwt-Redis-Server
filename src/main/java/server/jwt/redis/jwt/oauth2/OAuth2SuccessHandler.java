@@ -1,4 +1,4 @@
-package server.jwt.redis.jwt;
+package server.jwt.redis.jwt.oauth2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -8,8 +8,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import server.jwt.redis.domain.Member;
+import server.jwt.redis.dto.response.BasicResponse;
 import server.jwt.redis.dto.response.DefaultDataResponse;
 import server.jwt.redis.dto.response.LoginResponseDto;
+import server.jwt.redis.jwt.JwtProvider;
+import server.jwt.redis.jwt.PrincipalDetails;
 import server.jwt.redis.service.RequestService;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -45,14 +48,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         response.setHeader("Set-Cookie",cookie.toString());
 
-        LoginResponseDto responseDto = new LoginResponseDto(access_token);
+        //LoginResponseDto responseDto = new LoginResponseDto(access_token);
+        response.addHeader("Authorization", "Bearer " + access_token);
 
         // 응답시 정해진 형식에 맞춰서 응답, status, message , data를 담아서 응답한다.
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding("UTF-8");
 
-        DefaultDataResponse<LoginResponseDto> loginSuccessResponse = DefaultDataResponse.of(HttpStatus.OK.value(), "로그인 성공", responseDto);
+        BasicResponse loginSuccessResponse = BasicResponse.of(HttpStatus.OK.value(), "로그인 성공");
         response.getWriter().write(new ObjectMapper().writeValueAsString(loginSuccessResponse));
 
     }
