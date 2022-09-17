@@ -61,7 +61,7 @@ Redis를 담당하고 있는 서버를 완전 리부팅 하는 경우에만 리�
 
 ### ✅요청 & 응답
 
-|  | Request_Header  | Request_Body | Request_Cookie | Response_Body | Response_Cookie |
+|  | Request_Header  | Request_Body | Request_Cookie | Response_Header | Response_Cookie |
 | --- | --- | --- | --- | --- | --- |
 | 로그인 |  | ID & PW |  | Access Token | Refresh Token |
 | 토큰 재발급 |  |  | Refresh Token | Access Token | Refresh Token |
